@@ -6,6 +6,9 @@ import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.content.Intent;
 
 public class Cinny extends Activity {
     private WebView web;
@@ -52,8 +55,31 @@ public class Cinny extends Activity {
 	web.restoreState(savedInstanceState);
     }
 
+    // doesn't currently work in landscape mode
+    private boolean isKeyboardVisible() {
+        ViewGroup rootLayout = (ViewGroup) findViewById(R.id.rootLayout);
+        int heightDiff = rootLayout.getRootView().getHeight() - rootLayout.getHeight();
+        int contentViewTop = getWindow().findViewById(Window.ID_ANDROID_CONTENT).getTop();
+
+        return heightDiff <= contentViewTop;
+    }
+
     @Override
     public void onBackPressed() {
-        // FIXME: detect if no keyboard is visible and pass the back to webview?
+        // if soft keyboard is visible, ignore back button to allow closing it
+        if (isKeyboardVisible()) {
+            return;
+        }
+
+        // go back in history if we have any
+        if (web.canGoBack()) {
+            web.goBack();
+        } else {
+            // don't kill this activity but go to home screen
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
     }
 }
