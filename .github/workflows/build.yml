@@ -17,7 +17,7 @@ jobs:
         prerelease: true
         title: "Development Build"
 
-  unsigned:
+  apk:
     runs-on: ubuntu-20.04
 
     steps:
@@ -27,20 +27,27 @@ jobs:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha }}
 
+    - name: Install keystore
+      env:
+        KEYSTORE: ${{ secrets.KEYSTORE }}
+      shell: bash
+      run: |
+        base64 -d > keystore.jks <<<"$KEYSTORE"
+
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y make android-sdk android-sdk-platform-23
 
-    - name: Build unsigned APK
+    - name: Build APK
       run: |
-        make cinny.unsigned.apk
+        make
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: cinny.unsigned.apk
-        path: cinny.unsigned.apk
+        name: cinny.apk
+        path: cinny.apk
 
     - name: Upload development release
       if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
@@ -50,7 +57,7 @@ jobs:
         tag_name: "latest"
         prerelease: true
         files: |
-          cinny.unsigned.apk
+          cinny.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
